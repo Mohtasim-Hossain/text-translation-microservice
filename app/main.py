@@ -57,7 +57,7 @@ async def send_status_update(message: str):
 # Render the main HTML page
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return FileResponse("static/index.html")
+    return FileResponse("app/static/index.html")
 
 # Ensure uploads directory exists
 
@@ -121,7 +121,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 # Serve history.html for a specific session
 @app.get("/history/{session_id}", response_class=HTMLResponse)
 async def view_history_page(session_id: str):
-    return FileResponse("static/history.html")
+    return FileResponse("app/static/history.html")
 
 @app.get("/history_page/{session_id}")
 async def get_session_history(session_id: str):
