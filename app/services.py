@@ -38,7 +38,7 @@ async def send_status_update_(message: str):
     """
     Wrapper function to send status updates from services module
     """
-    from main import send_status_update  # Local import to avoid circular dependency
+    from app.main import send_status_update  
     await send_status_update(message)
 
 
