@@ -1,3 +1,0 @@
-This is the first test file.  translates to:
-
-**Este es el primer archivo de prueba.**
