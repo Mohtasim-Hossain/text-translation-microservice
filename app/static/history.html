@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation History</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-unknown {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .status-complete {
+            background-color: #0bc81e;
+            color: white;
+        }
+
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .pagination button:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .result-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .summary p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .download-btn {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        border-radius: 4px;
+        text-align: center;
+        border: 1px solid #007bff;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .download-btn:active {
+            background-color: #004085;
+            border-color: #004085;
+        }
+
+        .download-btn:disabled {
+            background-color: #f5f5f5;
+            color: #ccc;
+            border-color: #ddd;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Translation History</h1>
+            <a href="/" class="back-button">Back to Translator</a>
+        </div>
+
+        <div class="summary">
+            <p>Session ID: <span id="sessionId"></span></p>
+            <p>Created: <span id="sessionDate"></span></p>
+            <p>Total Files: <span id="totalFiles">0</span></p>
+        </div>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchInput" placeholder="Search files...">
+            <select id="entriesPerPage">
+                <option value="10">10 per page</option>
+                <option value="25">25 per page</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%">File Name</th>
+                        <th style="width: 20%">Processed At</th>
+                        <th style="width: 15%">Status</th>
+                        <th style="width: 40%">Link</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        let allData = [];
+        let currentPage = 1;
+        let entriesPerPage = 10;
+        let filteredData = [];
+
+        function formatDate(isoString) {
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleString();
+            } catch (e) {
+                console.error('Date parsing error:', e);
+                return isoString;
+            }
+        }
+
+        function filterData(searchTerm) {
+            return allData.filter(file => 
+                file.file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                file.result?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        function displayHistory(data, page = 1) {
+            document.getElementById('sessionId').textContent = data.session_id;
+            document.getElementById('sessionDate').textContent = formatDate(data.created_at);
+            document.getElementById('totalFiles').textContent = data.files_processed.length;
+
+            allData = data.files_processed.sort((a, b) => 
+                new Date(b.processed_at) - new Date(a.processed_at)
+            );
+            
+            const searchTerm = document.getElementById('searchInput').value;
+            filteredData = searchTerm ? filterData(searchTerm) : allData;
+
+            const start = (page - 1) * entriesPerPage;
+            const end = start + entriesPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            const tableBody = document.getElementById('historyTableBody');
+            tableBody.innerHTML = '';
+
+            paginatedData.forEach(file => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="file-name" title="${file.file_name}">${file.file_name}</td>
+                    <td>${formatDate(file.processed_at)}</td>
+                    <td>
+                        <span class="status-badge status-${(file.status || 'unknown').toLowerCase()}">
+                            ${file.status || 'UNKNOWN'}
+                        </span>
+                    </td>
+                    <td>
+                         <a href="${file.link || '#'}" download class="download-btn">Download</a>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '←';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayHistory({ 
+                        session_id: document.getElementById('sessionId').textContent,
+                        created_at: allData[0].processed_at,
+                        files_processed: allData
+                    }, currentPage);
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.classList.toggle('active', i === currentPage);
+                button.onclick = () => {
+                    currentPage = i;
+                    displayHistory({ 
+                        session_id: document.getElementById('sessionId').textContent,
+                        created_at: allData[0].processed_at,
+                        files_processed: allData
+                    }, currentPage);
+                };
+                pagination.appendChild(button);
+            }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '→';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayHistory({ 
+                        session_id: document.getElementById('sessionId').textContent,
+                        created_at: allData[0].processed_at,
+                        files_processed: allData
+                    }, currentPage);
+                }
+            };
+            pagination.appendChild(nextButton);
+        }
+
+        async function fetchHistoryData() {
+            const pathSegments = window.location.pathname.split('/');
+            const sessionId = pathSegments[pathSegments.length - 1];
+
+            try {
+                const response = await fetch(`/history_page/${sessionId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                displayHistory(data, currentPage);
+            } catch (error) {
+                console.error('Error fetching history:', error);
+                document.querySelector('.table-container').innerHTML = `
+                    <div class="error-message">
+                        <p>Failed to load translation history: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            currentPage = 1;
+            displayHistory({ 
+                session_id: document.getElementById('sessionId').textContent,
+                created_at: allData[0].processed_at,
+                files_processed: allData
+            }, currentPage);
+        });
+
+        document.getElementById('entriesPerPage').addEventListener('change', (e) => {
+            entriesPerPage = parseInt(e.target.value);
+            currentPage = 1;
+            displayHistory({ 
+                session_id: document.getElementById('sessionId').textContent,
+                created_at: allData[0].processed_at,
+                files_processed: allData
+            }, currentPage);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', fetchHistoryData);
+    </script>
+</body>
+</html>
