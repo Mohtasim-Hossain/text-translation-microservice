@@ -4,6 +4,12 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Ignore upload and download directories
+uploads/
+downloads/
+*.tmp
+*.log
+
 # Ignore FastAPI server logs (if any)
 *.log
 
