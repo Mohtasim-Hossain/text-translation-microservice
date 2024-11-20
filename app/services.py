@@ -30,8 +30,8 @@ LANGUAGE_MAP = {
     'pt': 'Portuguese',
     'ru': 'Russian',
     'ko': 'Korean',
-    'bn': 'Bangla', 
-    'tr': 'Turkish'
+    'bn': 'Bangla',
+    'tr': 'Turkish',
 }
 
 async def send_status_update_(message: str):
@@ -84,11 +84,11 @@ async def translate_file(file_name: str, file_path: str, language: str, session_
         # Write translated content to new file
         with open(translated_file_path, 'w', encoding='utf-8') as translated_file:
             translated_file.write(translated_text.text)
-        print(file_path)
+       
 
         # Generate the download link
         download_link = f"/download/{os.path.basename(translated_file_path)}"
-        print(download_link)
+     
         
         # Save translated content in MongoDB
         file_entry = {
