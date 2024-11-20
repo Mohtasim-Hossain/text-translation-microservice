@@ -9,8 +9,6 @@ from bson import ObjectId
 from dotenv import load_dotenv
 import json
 
-# Import your custom modules
-from models import FileEntry, SessionHistory
 from database import startup_db, history_collection, UPLOADS_DIR, DOWNLOADS_DIR
 from services import translate_file
 
