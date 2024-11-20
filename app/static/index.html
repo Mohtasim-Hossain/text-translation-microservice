@@ -276,6 +276,8 @@
         const downloadButton = document.getElementById("downloadButton");
 
         const websocket = new WebSocket("ws://127.0.0.1:8000/ws");
+        const websocket = new WebSocket("wss://https://translatefile.onrender.com/ws");
+
 
         websocket.onopen = () => {
             console.log("WebSocket connection established");
