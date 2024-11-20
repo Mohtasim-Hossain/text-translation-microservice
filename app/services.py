@@ -1,7 +1,7 @@
 import os, asyncio
 import google.generativeai as genai
 from dotenv import load_dotenv
-from database import db, history_collection
+from database import db, DOWNLOADS_DIR
 from datetime import datetime
 
 
@@ -15,8 +15,8 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-UPLOADS_DIR = "downloads"
-os.makedirs(UPLOADS_DIR, exist_ok=True)
+# UPLOADS_DIR = "downloads"
+# os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 # Language Mapping Dictionary
 LANGUAGE_MAP = {
@@ -70,7 +70,12 @@ async def translate_file(file_name: str, file_path: str, language: str, session_
         
         # Generate translation
         translated_text = model.generate_content(translation_prompt)
-        print(translated_text.text)
+        if translated_text and translated_text.text:
+           print("translated")
+        else:
+            print("Some error occured")
+
+
         status = "COMPLETE"
         # Extract translated text
         if not translated_text.text:
@@ -79,7 +84,7 @@ async def translate_file(file_name: str, file_path: str, language: str, session_
             
         
         # Create translated file path
-        translated_file_path = file_path.replace(".txt", f"_{language}_translated.txt")
+        translated_file_path = os.path.join(DOWNLOADS_DIR, os.path.basename(file_path).replace(".txt", f"_{language}_translated.txt"))
         
         # Write translated content to new file
         with open(translated_file_path, 'w', encoding='utf-8') as translated_file:
@@ -134,11 +139,6 @@ async def translate_file(file_name: str, file_path: str, language: str, session_
             {"$set": {"files_processed.$.result": "Failed", "files_processed.$.error_message": str(e)}}
         )
         raise
-
-
-
-
-
 
 
 

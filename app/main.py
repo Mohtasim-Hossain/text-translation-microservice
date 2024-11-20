@@ -1,25 +1,24 @@
-
-import os, shutil, uuid, asyncio
+import os
+import shutil
+import uuid
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect, Form, BackgroundTasks, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pymongo import MongoClient
 from datetime import datetime
 from bson import ObjectId
 from dotenv import load_dotenv
-from models import FileEntry, SessionHistory  # Assuming models.py is in the same directory
-from database import startup_db, history_collection, db
-from services import translate_file
-from bson import ObjectId
 import json
 
-
+# Import your custom modules
+from models import FileEntry, SessionHistory
+from database import startup_db, history_collection, UPLOADS_DIR, DOWNLOADS_DIR
+from services import translate_file
 
 load_dotenv()
 app = FastAPI()
 
+# Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
 
 # WebSocket clients to push real-time updates
 clients = []
@@ -37,31 +36,32 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         clients.remove(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        if websocket in clients:
+            clients.remove(websocket)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 # Utility function to send status updates via WebSocket
 async def send_status_update(message: str):
-    for client in clients:
+    for client in clients.copy():  # Create a copy to safely iterate
         try:
             await client.send_text(message)
         except Exception as e:
             print(f"Error sending WebSocket message: {e}")
-            clients.remove(client)
-
-
+            if client in clients:
+                clients.remove(client)
 
 # Render the main HTML page
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
+async def root():
     return FileResponse("static/index.html")
-    # return templates.TemplateResponse("index.html", {"request": request})
 
-
-
-UPLOADS_DIR = "uploads"
-os.makedirs(UPLOADS_DIR, exist_ok=True)  # Ensure uploads directory exists
-
-
-
+# Ensure uploads directory exists
 
 @app.post("/upload")
 async def upload_file(
@@ -70,6 +70,7 @@ async def upload_file(
     language: str = Form(...), 
     session_id: str = Form(...)
 ):
+    # Validate file type
     if not file.filename.endswith(".txt"):
         raise HTTPException(status_code=400, detail="Only .txt files are allowed")
 
@@ -79,8 +80,8 @@ async def upload_file(
     # Save the uploaded file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-     # Send WebSocket update when translation starts
 
+    # Send WebSocket update when translation starts
     await send_status_update(f"File {file.filename} uploaded. Translation starting...")
 
     # Add background task to translate the file
@@ -93,23 +94,22 @@ async def upload_file(
         "session_id": session_id
     }
 
-
-
-
 @app.get("/download/{file_name}")
 async def download_file(file_name: str):
-    file_path = os.path.join(UPLOADS_DIR, file_name)  # Make sure the path is correct
-    # file_path = os.path.join(UPLOADS_DIR, f"{uuid.uuid4()}_{file.filename}")
+    # Search in both uploads and downloads directories
+    search_paths = [UPLOADS_DIR, DOWNLOADS_DIR]
     
-    if os.path.exists(file_path):
-        return FileResponse(file_path, media_type='application/octet-stream', headers={"Content-Disposition": f"attachment; filename={file_name}"})
-    else:
-        return JSONResponse(content={"message": "File not found"}, status_code=404)
-
-
-
-
-
+    for search_path in search_paths:
+        file_path = os.path.join(search_path, file_name)
+        
+        if os.path.exists(file_path):
+            return FileResponse(
+                file_path, 
+                media_type='application/octet-stream', 
+                headers={"Content-Disposition": f"attachment; filename={file_name}"}
+            )
+    
+    return JSONResponse(content={"message": "File not found"}, status_code=404)
 
 # Custom JSON encoder to handle datetime and ObjectId
 class CustomJSONEncoder(json.JSONEncoder):
@@ -119,18 +119,11 @@ class CustomJSONEncoder(json.JSONEncoder):
         if isinstance(obj, ObjectId):
             return str(obj)
         return super().default(obj)
-    
-
-
 
 # Serve history.html for a specific session
 @app.get("/history/{session_id}", response_class=HTMLResponse)
 async def view_history_page(session_id: str):
-    # This serves the history.html file directly
     return FileResponse("static/history.html")
-
-
-
 
 @app.get("/history_page/{session_id}")
 async def get_session_history(session_id: str):
@@ -164,10 +157,7 @@ async def get_session_history(session_id: str):
         
         return JSONResponse(content=session_dict)
     except Exception as e:
-        print(f"Error processing history: {str(e)}")  # Add logging for debugging
+        print(f"Error processing history: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
 
 

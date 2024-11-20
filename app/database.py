@@ -5,6 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+UPLOADS_DIR = "uploads"
+DOWNLOADS_DIR = "downloads"
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+os.makedirs(DOWNLOADS_DIR, exist_ok=True)
+
 # Get the MongoDB URI from environment variables
 MONGODB_URI = os.getenv("MONGODB_URI")
 
