@@ -9,8 +9,8 @@ from bson import ObjectId
 from dotenv import load_dotenv
 import json
 
-from database import startup_db, history_collection, UPLOADS_DIR, DOWNLOADS_DIR
-from services import translate_file
+from app.database import startup_db, history_collection, UPLOADS_DIR, DOWNLOADS_DIR
+from app.services import translate_file
 
 load_dotenv()
 app = FastAPI()
