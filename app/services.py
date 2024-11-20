@@ -1,7 +1,7 @@
 import os, asyncio
 import google.generativeai as genai
 from dotenv import load_dotenv
-from database import db, DOWNLOADS_DIR
+from app.database import db, DOWNLOADS_DIR
 from datetime import datetime
 
 
