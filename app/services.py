@@ -29,7 +29,9 @@ LANGUAGE_MAP = {
     'hi': 'Hindi',
     'pt': 'Portuguese',
     'ru': 'Russian',
-    'ko': 'Korean'
+    'ko': 'Korean',
+    'bn': 'Bangla', 
+    'tr': 'Turkish'
 }
 
 async def send_status_update_(message: str):
