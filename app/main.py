@@ -16,7 +16,7 @@ load_dotenv()
 app = FastAPI()
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # WebSocket clients to push real-time updates
 clients = []
