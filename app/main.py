@@ -4,6 +4,7 @@ import uuid
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect, Form, BackgroundTasks, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from bson import ObjectId
 from dotenv import load_dotenv
@@ -17,6 +18,15 @@ app = FastAPI()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://translatefile.onrender.com/"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # WebSocket clients to push real-time updates
 clients = []
