@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #4F46E5;
+            --primary-color: #6c66cf;
             --primary-hover: #4338CA;
             --background-color: #F3F4F6;
             --card-background: #FFFFFF;
@@ -126,7 +126,7 @@
             color: white;
         }
 
-        .status-error {
+        .status-failed {
             background-color: var(--danger-color);
             color: white;
         }
@@ -143,6 +143,7 @@
 
         .back-button:hover {
             background-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .pagination {
@@ -202,6 +203,7 @@
 
         .download-btn:hover {
             background-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         @media (max-width: 768px) {
@@ -336,8 +338,8 @@
                     <td class="file-name" title="${file.file_name}">${file.file_name}</td>
                     <td>${formatDate(file.processed_at)}</td>
                     <td>
-                        <span class="status-badge status-${(file.status || 'unknown').toLowerCase()}">
-                            ${file.status || 'UNKNOWN'}
+                        <span class="status-badge status-${(file.status || 'failed').toLowerCase()}">
+                            ${file.status || 'FAILED'}
                         </span>
                     </td>
                     <td>
