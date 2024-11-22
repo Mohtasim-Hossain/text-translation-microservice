@@ -20,6 +20,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 # Language Mapping Dictionary
 LANGUAGE_MAP = {
+    'en': 'English',
     'es': 'Spanish',
     'fr': 'French',
     'de': 'German',
@@ -27,7 +28,6 @@ LANGUAGE_MAP = {
     'ja': 'Japanese',
     'ar': 'Arabic',
     'hi': 'Hindi',
-    'pt': 'Portuguese',
     'ru': 'Russian',
     'ko': 'Korean',
     'bn': 'Bangla',
